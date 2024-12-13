@@ -16,7 +16,7 @@ const Tricab = ({ route }) => {
 
       {/* Image Section */}
       <View style={styles.imageContainer}>
-        <Image source={place.image} style={styles.mainImage} />
+      <Image source={require('../../assets/bao.png')} style={styles.mainImage} />
       </View>
 
       {/* Info Section */}
