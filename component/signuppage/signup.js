@@ -37,13 +37,11 @@ const SignUpScreen = () => {
   };
   const handleSignUpSubmit = async () => {
     try {
-      // Check if mandatory fields are completed
       if (!username || !email || !password || !role) {
         alert('All fields must be completed.');
         return;
       }
   
-      // Additional validation for Business Owner role
       if (role === "Business Owner") {
         if (!businessName || !businessType || !location || !guidelines || !prices || !contactUs) {
           alert('All Business Owner fields must be completed.');
@@ -51,33 +49,36 @@ const SignUpScreen = () => {
         }
       }
   
-      // Create user account using Firebase Authentication
       const user = await handleSignUp(email, password);
   
-      // Upload profile photo if provided and get the URL
       let profilePhotoUrl = '';
       if (profilePhotoUri) {
         profilePhotoUrl = await uploadProfilePhoto(user.uid, profilePhotoUri);
       }
   
-      // Prepare user data to be saved in Firestore
+      let businessImagesUrls = [];
+      if (businessImages.length > 0) {
+        businessImagesUrls = await uploadBusinessImages(user.uid, businessImages);
+      }
+  
       const userData = {
         username: username.trim(),
         role: role.trim(),
-        profilePicture: profilePhotoUrl || '', // Only store the URL, not the file itself
+        profilePicture: profilePhotoUrl || '',
+        businessImages: businessImagesUrls,
       };
   
-      // Add additional fields for Business Owner
       if (role === "Business Owner") {
-        userData.businessName = businessName.trim();
-        userData.businessType = businessType.trim();
-        userData.location = location.trim();
-        userData.guidelines = guidelines.trim();
-        userData.prices = prices.trim();
-        userData.contactUs = contactUs.trim();
+        Object.assign(userData, {
+          businessName: businessName.trim(),
+          businessType: businessType.trim(),
+          location: location.trim(),
+          guidelines: guidelines.trim(),
+          prices: prices.trim(),
+          contactUs: contactUs.trim(),
+        });
       }
   
-      // Save the user data to Firestore
       await saveUserData(user.uid, userData);
   
       console.log('User signed up and data saved:', userData);
@@ -144,7 +145,7 @@ const SignUpScreen = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView  bounces={true} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.container}>
       <View style={styles.header} />
       <Text style={styles.headerText}>Sign Up</Text>
   
@@ -376,12 +377,12 @@ const SignUpScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
     backgroundColor: '#fff',
   },
   header: {
-    height: 'hide',
+    height: '0',
     backgroundColor: 'green',
     marginBottom: 20,
   },
