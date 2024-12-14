@@ -21,6 +21,8 @@ const MyAccountScreen = () => {
   const [contactUs, setContactUs] = useState('');
   const [businessImages, setBusinessImages] = useState([]);
   const [attractions, setAttractions] = useState('');
+  const [overview, setOverview] = useState('');
+  const [exactLocation, setExactLocation] = useState('');
 
   const auth = getAuth();
   const db = getFirestore();
@@ -46,15 +48,24 @@ const MyAccountScreen = () => {
         if (userDoc.exists()) {
           const data = userDoc.data();
           console.log('Fetched Data:', JSON.stringify(data, null, 2));
-
+          
           setProfilePhoto(data.profilePicture || 'https://via.placeholder.com/150');
           setUsername(data.username || 'Name not set');
           setRole(data.role || 'Visitor');
-          setAttractions(data.attractions || 'Not Available');
+          
+          // Only set attractions if the role is NOT "Visitor"
+          if (data.role !== 'Visitor') {
+            setAttractions(data.attractions || 'Not Available');
+          } else {
+            setAttractions(''); // Clear attractions for visitors
+          }
+          
           if (data.role === 'Business Owner') {
             setBusinessName(data.businessName || 'Business Name not set');
             setBusinessType(data.businessType || 'Business Type not set');
             setLocation(data.location || 'Location not set');
+            setExactLocation(data.exactLocation || 'Exact Location not set'); // Added
+            setOverview(data.overview || 'Overview not set'); // Added
             setGuidelines(data.guidelines || 'Guidelines not set');
             setPrices(data.prices || 'Prices not set');
             setContactUs(data.contactUs || 'Contact info not set');
@@ -71,6 +82,7 @@ const MyAccountScreen = () => {
         console.error('Error fetching user data:', error.message);
         alert('Error fetching user data.');
       }
+      
     };
 
     fetchUserData();
@@ -127,14 +139,16 @@ const MyAccountScreen = () => {
 
     if (role === 'Business Owner') {
       Object.assign(updatedData, {
-        businessName,
-        businessType,
-        location,
-        guidelines,
-        prices,
-        contactUs,
+          businessName,
+          businessType,
+          location,
+          exactLocation, // Added
+          overview, // Added
+          guidelines,
+          prices,
+          contactUs,
       });
-    }
+  }
 
     try {
       await updateDoc(userDocRef, updatedData);
@@ -225,7 +239,6 @@ const MyAccountScreen = () => {
         {renderField('mail', 'Email', email, setEmail, isEditing, MaterialIcons)}
         {renderStaticField('key', 'User ID', userUid, MaterialIcons)}
         {renderStaticField('user', 'Role', role, FontAwesome)}
-        {renderStaticField('map', 'Attractions', attractions, FontAwesome)}
       </View>
 
       {role === 'Business Owner' && (
@@ -237,6 +250,9 @@ const MyAccountScreen = () => {
             {renderField('book', 'Guidelines', guidelines, setGuidelines, isEditing, FontAwesome)}
             {renderField('money', 'Prices', prices, setPrices, isEditing, FontAwesome)}
             {renderField('phone', 'Contact Us', contactUs, setContactUs, isEditing, FontAwesome)}
+            {renderField('info-circle', 'Overview', overview, setOverview, isEditing, FontAwesome)}
+            {renderField('map', 'Exact Location', exactLocation, setExactLocation, isEditing, FontAwesome)}
+
           </View>
 
           <View style={styles.imagePreviewContainer}>

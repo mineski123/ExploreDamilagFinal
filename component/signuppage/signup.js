@@ -26,6 +26,8 @@ const SignUpScreen = () => {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
   const [isRolePickerVisible, setRolePickerVisible] = useState(false);
   const [isBusinessTypePickerVisible, setBusinessTypePickerVisible] = useState(false);
+  const [overview, setOverview] = useState('');
+  const [exactLocation, setExactLocation] = useState('');
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!isPasswordVisible);
@@ -69,10 +71,16 @@ const SignUpScreen = () => {
       };
   
       if (role === "Business Owner") {
+        if (!businessName || !businessType || !location || !exactLocation || !guidelines || !prices || !contactUs || !overview) {
+          alert('All Business Owner fields must be completed.');
+          return;
+        }
         Object.assign(userData, {
           businessName: businessName.trim(),
           businessType: businessType.trim(),
           location: location.trim(),
+          exactLocation: exactLocation.trim(),
+          overview: overview.trim(),
           guidelines: guidelines.trim(),
           prices: prices.trim(),
           contactUs: contactUs.trim(),
@@ -243,6 +251,18 @@ const SignUpScreen = () => {
               onChangeText={setBusinessName}
             />
           </View>
+
+            {/* Overview */}
+      <Text style={styles.label}>Overview</Text>
+      <View style={styles.inputGroup}>
+        <FontAwesome name="info-circle" size={20} color="green" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Overview"
+          value={overview}
+          onChangeText={setOverview}
+        />
+      </View>
   
         {/* Business Type */}
 <Text style={styles.label}>Business Type</Text>
@@ -261,26 +281,26 @@ const SignUpScreen = () => {
   <Entypo name="chevron-down" size={20} color="grey" style={styles.iconRight} />
 </TouchableOpacity>
 
-{/* Business Type Picker Modal */}
-<Modal visible={isBusinessTypePickerVisible} transparent animationType="slide">
-  <View style={styles.modalContainer}>
-    <View style={styles.modal}>
-      <Text style={styles.modalHeader}>Select Business Type</Text>
-      {["Hotels", "Attractions", "Food"].map((type) => (
-        <TouchableOpacity
-          key={type}
-          style={styles.modalOption}
-          onPress={() => handleBusinessTypeSelect(type)}
-        >
-          <Text style={styles.modalText}>{type}</Text>
-        </TouchableOpacity>
-      ))}
-      <TouchableOpacity onPress={() => setBusinessTypePickerVisible(false)}>
-        <Text style={styles.modalClose}>Close</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
+          {/* Business Type Picker Modal */}
+          <Modal visible={isBusinessTypePickerVisible} transparent animationType="slide">
+            <View style={styles.modalContainer}>
+              <View style={styles.modal}>
+                <Text style={styles.modalHeader}>Select Business Type</Text>
+                {["Hotels", "Attractions", "Food"].map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={styles.modalOption}
+                    onPress={() => handleBusinessTypeSelect(type)}
+                  >
+                    <Text style={styles.modalText}>{type}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity onPress={() => setBusinessTypePickerVisible(false)}>
+                  <Text style={styles.modalClose}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
 
           {/* Location */}
           <Text style={styles.label}>Location</Text>
@@ -291,6 +311,18 @@ const SignUpScreen = () => {
               placeholder="Location"
               value={location}
               onChangeText={setLocation}
+            />
+          </View>
+
+                {/* Exact Location */}
+          <Text style={styles.label}>Exact Location</Text>
+          <View style={styles.inputGroup}>
+            <FontAwesome name="map" size={20} color="green" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Exact Location"
+              value={exactLocation}
+              onChangeText={setExactLocation}
             />
           </View>
   
