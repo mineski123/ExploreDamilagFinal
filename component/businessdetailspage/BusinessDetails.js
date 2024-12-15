@@ -1,24 +1,70 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
-import placesdata from '../placesdatapage/placesdata';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import app from '../../src/config/firebase';
 
 // Get the screen dimensions
-const { width, height } = Dimensions.get('window');
-
-const scaleSize = (size) => (width / 375) * size;  // 375 is the width of iPhone 6, a standard reference device
+const { width } = Dimensions.get('window');
+const scaleSize = (size) => (width / 375) * size; // 375 is the width of iPhone 6, a standard reference device
 const scaleFont = (size) => (width / 375) * size;
 
 const BusinessDetails = ({ route, navigation }) => {
-  const { place } = route.params || {};
-  const placeDetails = placesdata[place?.name];
-  const [expanded, setExpanded] = useState(false); // State to manage toggle
+  const [business, setBusiness] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false); // State to manage overview toggle
   const [isFavorited, setIsFavorited] = useState(false); // State for heart button
 
-  if (!placeDetails) {
+  const db = getFirestore(app);
+
+  const { uid } = route.params || {}; // Retrieve the `uid` from route params
+
+  useEffect(() => {
+    if (!uid) {
+      console.error('No uid provided!');
+      setLoading(false);
+      return;
+    }
+
+    const fetchBusinessDetails = async () => {
+      try {
+        const docRef = doc(db, 'users', uid); // Query Firestore 'users' collection with the `uid`
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          console.log('Fetched Business Data:', docSnap.data());
+          setBusiness(docSnap.data());
+        } else {
+          console.error('No such document!');
+        }
+      } catch (error) {
+        console.error('Error fetching business details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBusinessDetails();
+  }, [uid]);
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="green" />
+        <Text>Loading business details...</Text>
+      </View>
+    );
+  }
+
+  // Handle case where business is not found
+  if (!business) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Place details not found.</Text>
+        <Text style={styles.title}>Business details not found.</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -27,20 +73,21 @@ const BusinessDetails = ({ route, navigation }) => {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Main Image with Overlayed Header */}
       <View style={styles.imageContainer}>
-        <Image source={placeDetails.images[0]} style={styles.mainImage} />
+        <Image
+          source={{ uri: business.businessImages?.[0] || 'https://via.placeholder.com/400x300' }}
+          style={styles.mainImage}
+        />
         <View style={styles.headerOverlay}>
-          {/* Back button */}
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
             <Ionicons name="arrow-back" size={24} color="#4CAF50" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Place Details */}
+      {/* Business Details */}
       <View style={styles.infoContainer}>
-        {/* Row for Title and Heart Button */}
         <View style={styles.titleRow}>
-          <Text style={styles.name}>{placeDetails.name}</Text>
+          <Text style={styles.name}>{business.businessName || 'Unnamed Business'}</Text>
           {/* Heart button */}
           <TouchableOpacity
             onPress={() => setIsFavorited(!isFavorited)}
@@ -54,31 +101,21 @@ const BusinessDetails = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.subtitle}>Manolo Fortich, Bukidnon</Text>
+        <Text style={styles.subtitle}>{business.location || 'Unknown Location'}</Text>
 
-        {/* Star Rating */}
         <View style={styles.ratingContainer}>
-          {[...Array(placeDetails.rating)].map((_, i) => (
+          {[...Array(5)].map((_, i) => (
             <Ionicons key={i} name="star" size={scaleSize(20)} color="gold" />
           ))}
         </View>
 
-        {/* Location */}
-        <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={scaleSize(16)} color="green" />
-          <Text style={styles.locationDetail}>{placeDetails.location}</Text>
-        </View>
-
-        {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Overview */}
         <Text style={styles.overviewTitle}>OVERVIEW</Text>
         <Text style={styles.description}>
-          {expanded ? placeDetails.description : `${placeDetails.description.slice(0, 100)}...`}
+          {expanded ? business.overview : `${business.overview?.slice(0, 100)}...`}
         </Text>
 
-        {/* Toggle Button */}
         <TouchableOpacity
           style={styles.readMoreButton}
           onPress={() => setExpanded(!expanded)} // Toggle expanded state
@@ -88,76 +125,45 @@ const BusinessDetails = ({ route, navigation }) => {
           </Text>
         </TouchableOpacity>
 
-        {/* Action Buttons Section */}
         <View style={styles.actionContainer}>
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="location-outline" size={scaleSize(30)} color="black" />
             <Text style={styles.actionText}>Location</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() =>
-              navigation.navigate('Guidelines', {
-                guidelines: placeDetails.guidelines,
-                placeName: placeDetails.name,
-                location: placeDetails.location,
-                rating: placeDetails.rating,
-                image: placeDetails.images[0],
-              })
-            }
-          >
+          <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="book-outline" size={scaleSize(30)} color="black" />
             <Text style={styles.actionText}>Guidelines</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('Prices', { placeDetails: placeDetails })}
-          >
-            <FontAwesome5 name="percentage" size={scaleSize(30)} color="black" />
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="wallet-outline" size={scaleSize(30)} color="black" />
             <Text style={styles.actionText}>Prices</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('ContactUs', {
-                contactInfo: {
-                  contactNumber: placeDetails.contactNumber,
-                  email: placeDetails.email,
-                  address: placeDetails.address,
-                  name: placeDetails.name,
-                  image: placeDetails.images[0],
-                  location: placeDetails.location,
-                  rating: placeDetails.rating, // Include rating here
-                },
-              })
-            }
-            style={styles.actionButton}
-          >
-            <FontAwesome5 name="address-book" size={scaleSize(30)} color="black" />
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="call-outline" size={scaleSize(30)} color="black" />
             <Text style={styles.actionText}>Contact Us</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Go There Now Button */}
         <TouchableOpacity style={styles.goThereButton}>
           <Text style={styles.goThereButtonText}>Go there now!</Text>
         </TouchableOpacity>
 
-        {/* Photos Section */}
         <View style={styles.photosContainer}>
           <Text style={styles.photosTitle}>Photos</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {placeDetails.images.map((image, index) => (
-              <Image key={index} source={image} style={styles.photo} />
-            ))}
+            {business.businessImages?.map((uri, index) => (
+              <Image key={index} source={{ uri }} style={styles.photo} />
+            )) || <Text>No photos available</Text>}
           </ScrollView>
         </View>
       </View>
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

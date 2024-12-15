@@ -117,7 +117,7 @@ const HomeScreen = () => {
                   <TouchableOpacity
                     key={business.id}
                     style={styles.card}
-                    onPress={() => navigation.navigate('BusinessDetails', { business })}
+                    onPress={() => navigation.navigate('BusinessDetails', { uid: business.id })}
                   >
                     <Image
                       source={{ uri: business.profilePicture || 'https://via.placeholder.com/150' }}
@@ -131,34 +131,34 @@ const HomeScreen = () => {
           </View>
         ))}
 
-                      {/* Transportation Section */}
-          <Text style={styles.sectionTitle}>Transportation</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScrollView}>
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => navigation.navigate('Tricab', { place: { name: 'Tric-cab', location: 'Main Road', image: 'https://your-tricab-image-url.com' } })}
-            >
-              <Image source={require('../../assets/bao.png')} style={styles.cardImage} />
-              <Text style={styles.cardTitle}>Tric-cab</Text>
-              <Text style={styles.cardSubtitle}>Main Road</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => navigation.navigate('Multicab', { place: { name: 'Multi-cab', location: 'Secondary Road', image: 'https://your-multicab-image-url.com' } })}
-            >
-              <Image source={require('../../assets/multicab.png')} style={styles.cardImage} />
-              <Text style={styles.cardTitle}>Multi-cab</Text>
-              <Text style={styles.cardSubtitle}>Secondary Road</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => navigation.navigate('Habal', { place: { name: 'Habal-habal', location: 'Village Path', image: 'https://your-habal-image-url.com' } })}
-            >
-              <Image source={require('../../assets/habal.png')} style={styles.cardImage} />
-              <Text style={styles.cardTitle}>Habal-habal</Text>
-              <Text style={styles.cardSubtitle}>Village Path</Text>
-            </TouchableOpacity>
-          </ScrollView>
+        {/* Transportation Section */}
+        <Text style={styles.sectionTitle}>Transportation</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScrollView}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('Tricab')}
+          >
+            <Image source={require('../../assets/bao.png')} style={styles.cardImage} />
+            <Text style={styles.cardTitle}>Tric-cab</Text>
+            <Text style={styles.cardSubtitle}>Main Road</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('Multicab')}
+          >
+            <Image source={require('../../assets/multicab.png')} style={styles.cardImage} />
+            <Text style={styles.cardTitle}>Multi-cab</Text>
+            <Text style={styles.cardSubtitle}>Secondary Road</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('Habal')}
+          >
+            <Image source={require('../../assets/habal.png')} style={styles.cardImage} />
+            <Text style={styles.cardTitle}>Habal-habal</Text>
+            <Text style={styles.cardSubtitle}>Village Path</Text>
+          </TouchableOpacity>
+        </ScrollView>
 
         {/* Footer Section */}
         <View style={styles.footerContainer}>
@@ -168,7 +168,7 @@ const HomeScreen = () => {
           </Text>
           <TouchableOpacity
             style={styles.footerButton}
-            onPress={() => navigation.navigate('BarangayDamilag')}
+            onPress={() => navigation.navigate('DamilagGuidelines')}
           >
             <Text style={styles.footerButtonText}>Read more</Text>
           </TouchableOpacity>

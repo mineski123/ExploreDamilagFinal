@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import app from '../../src/config/firebase';
 
 const BusinessList = () => {
   const [groupedBusinesses, setGroupedBusinesses] = useState({});
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation(); // For navigating to BusinessDetails screen
 
   const db = getFirestore(app);
 
   useEffect(() => {
     const fetchBusinesses = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'users')); // Adjust collection name if necessary
+        const querySnapshot = await getDocs(collection(db, 'users')); // Fetch all documents from the 'users' collection
         const data = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
 
-        // Group businesses by type
+        // Group businesses by businessType
         const grouped = data.reduce((acc, business) => {
           const type = business.businessType || 'Other';
           if (!acc[type]) acc[type] = [];
@@ -39,8 +41,17 @@ const BusinessList = () => {
 
   if (loading) {
     return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+        <Text>Loading businesses...</Text>
+      </View>
+    );
+  }
+
+  if (!Object.keys(groupedBusinesses).length) {
+    return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={styles.emptyText}>No businesses found.</Text>
       </View>
     );
   }
@@ -49,17 +60,25 @@ const BusinessList = () => {
     <ScrollView style={styles.container}>
       {Object.keys(groupedBusinesses).map((type) => (
         <View key={type} style={styles.sectionContainer}>
+          {/* Section Title */}
           <Text style={styles.sectionTitle}>{type.toUpperCase()}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScrollView}>
             {groupedBusinesses[type].map((business) => (
-              <View key={business.id} style={styles.card}>
+              <TouchableOpacity
+                key={business.id}
+                style={styles.card}
+                onPress={() => navigation.navigate('BusinessDetails', { businessId: business.id })}
+              >
+                {/* Business Profile Picture */}
                 <Image
                   source={{ uri: business.profilePicture || 'https://via.placeholder.com/150' }}
                   style={styles.cardImage}
                 />
+                {/* Business Name */}
                 <Text style={styles.cardTitle}>{business.businessName || 'Unnamed Business'}</Text>
+                {/* Business Location */}
                 <Text style={styles.cardSubtitle}>{business.location || 'Unknown Location'}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
@@ -71,8 +90,19 @@ const BusinessList = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f8f8',
     padding: 10,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: 'gray',
+    marginTop: 20,
   },
   sectionContainer: {
     marginBottom: 20,
@@ -80,10 +110,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
     marginBottom: 10,
   },
   horizontalScrollView: {
-    marginBottom: 20,
+    paddingBottom: 10,
   },
   card: {
     width: 150,
@@ -100,10 +131,13 @@ const styles = StyleSheet.create({
   cardImage: {
     width: '100%',
     height: 100,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#4CAF50',
     margin: 5,
   },
   cardSubtitle: {
